@@ -1,0 +1,13 @@
+{
+  "name": "pstack-omp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unofficial omp adaptation of pstack: 58 namespaced skills and two native agents.",
+  "license": "MIT",
+  "repository": "https://github.com/garesuta/pstack-omp",
+  "files": ["skills", "agents", "docs", "scripts", "LICENSE", "README.md", "UPSTREAM.json", "UPSTREAM-README.md"],
+  "scripts": {
+    "test": "node scripts/verify-install.mjs"
+  },
+  "omp": {}
+}
