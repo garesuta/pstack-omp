@@ -62,7 +62,11 @@ try {
       check(match, `Missing pstack name in ${file}`);
       return { name: match[1], file };
     });
-    check(entries.length === 58 && new Set(entries.map(entry => entry.name)).size === 58, `Expected 58 unique pstack skills, found ${entries.length} directories and ${new Set(entries.map(entry => entry.name)).size} names`);
+    const metadata = JSON.parse(readFileSync(join(root, 'UPSTREAM.json'), 'utf8'));
+    const localSkills = metadata.localSkills ?? [];
+    const expectedCount = metadata.skillCount + localSkills.length;
+    check(entries.length === expectedCount && new Set(entries.map(entry => entry.name)).size === expectedCount, `Expected ${expectedCount} unique pstack skills, found ${entries.length} directories and ${new Set(entries.map(entry => entry.name)).size} names`);
+    for (const name of localSkills) check(entries.some(entry => entry.name === `pstack-${name}`), `Missing local skill pstack-${name}`);
     return entries;
   }
   function markdownFiles(dir) {
@@ -123,7 +127,7 @@ try {
   const installed = join(home, '.omp', 'plugins', 'node_modules', 'pstack-omp');
   check(existsSync(installed), 'Installed plugin directory not found');
   const skills = names(installed);
-  check(expected.map(entry => entry.name).sort().join('\n') === skills.map(entry => entry.name).sort().join('\n'), 'Installed skill names differ from local export');
+  if (!spec) check(expected.map(entry => entry.name).sort().join('\n') === skills.map(entry => entry.name).sort().join('\n'), 'Installed skill names differ from local export');
   for (const agent of expectedAgents) {
     const files = readdirSync(join(installed, 'agents')).filter(file => file.endsWith('.md'));
     check(files.length === 2 && files.some(file => new RegExp(`^name:\\s*${agent}\\s*$`, 'm').test(readFileSync(join(installed, 'agents', file), 'utf8'))), `Installed agent ${agent} missing or unexpected agent count`);
@@ -144,7 +148,7 @@ try {
   state('uninstalled', false, skills);
   install();
   state('reinstalled', true, skills);
-  console.log('Verified 58 skills, 2 agents, Markdown dependencies, relocation, and plugin lifecycle.');
+  console.log(`Verified ${skills.length} skills, 2 agents, Markdown dependencies, relocation, and plugin lifecycle.`);
 } catch (error) {
   console.error(`Installation verification failed before cutover: ${error.message}`);
   process.exitCode = 1;

@@ -1,15 +1,15 @@
 # pstack for omp
 
-Unofficial omp adaptation of [Cursor's pstack](https://github.com/cursor/plugins/tree/main/pstack). Includes all 58 skills, both native agents, playbooks, scripts, documentation, and supporting assets from the pinned upstream version.
+Unofficial omp adaptation of [Cursor's pstack](https://github.com/cursor/plugins/tree/main/pstack). This checkout includes all 58 upstream skills, one local update-check skill, both native agents, playbooks, scripts, documentation, and supporting assets from the pinned upstream version.
 
 This is a declarative native omp plugin. It has no runtime extension, install hook, root dependencies, or automatic updater. Installation does not copy credentials or write model settings.
 
 ## Install on a new computer
 
-Install omp and Git, then configure Git access to this private repository. For SSH, authorize a GitHub SSH key on the new computer first.
+Install omp and Git. The repository is public; no GitHub credentials are needed to install the existing published tag:
 
 ```sh
-omp plugin install git:git@github.com:garesuta/pstack-omp#v0.1.0
+omp plugin install git:https://github.com/garesuta/pstack-omp.git#v0.1.0
 ```
 
 Start a new omp session after installation. Existing sessions and their children may retain an old skill catalog.
@@ -41,7 +41,7 @@ Bundled scripts retain their upstream prerequisites and side effects. Watcher bo
 For development, clone the repo and use a local plugin link:
 
 ```sh
-git clone git@github.com:garesuta/pstack-omp.git
+git clone https://github.com/garesuta/pstack-omp.git
 cd pstack-omp
 omp plugin link "$PWD"
 node scripts/verify-install.mjs
@@ -52,14 +52,32 @@ The dependency-free verifier uses a disposable HOME and workspace. It checks the
 To check a published Git release instead of the local copy:
 
 ```sh
-node scripts/verify-install.mjs git:git@github.com:garesuta/pstack-omp#v0.1.0
+node scripts/verify-install.mjs git:https://github.com/garesuta/pstack-omp.git#v0.1.0
 ```
 
-Private Git access still needs caller-authorized authentication, such as an SSH agent. The verifier does not copy credentials into its disposable HOME. Safe model-backed workflow checks are separate from this offline discovery/lifecycle check. Do not run shipping, automation, provisioning, or destructive cleanup against live targets merely to verify installation.
+The verifier does not copy credentials into its disposable HOME. Safe model-backed workflow checks are separate from this offline discovery/lifecycle check. Do not run shipping, automation, provisioning, or destructive cleanup against live targets merely to verify installation.
 
 ## Update, disable, and remove
 
 Releases are pinned. To move to a later release, install its explicit tag using the same command with the new version. Upgrading a dependency pinned to `v0.1.0` does not select a newer tag automatically.
+
+### Check upstream manually
+
+The checker and `/skill:pstack-check-updates` are unreleased local changes. The existing `v0.1.0` tag does not contain them. Use a checkout or a future tagged release containing this feature; local changes become installable as a pinned release only after a future tag is published. Restart the omp session after installing a release to refresh its skill catalog.
+
+The manual checker needs Node.js with built-in `fetch` (Node.js 18 or later). From a checkout containing the feature:
+
+```sh
+npm run upstream:check
+npm run upstream:check -- --json
+node scripts/check-upstream.mjs --json
+```
+
+Use the direct Node command for machine-readable JSON: npm adds banners. `--help` describes the CLI. The checker reports `current`, `update-available`, or `unknown`. It exits 0 for `current` or `update-available`, 1 for `unknown`, and 2 for invalid CLI usage. An optional `GH_TOKEN` or `GITHUB_TOKEN` can help with GitHub API rate limits; neither is required.
+
+The check reads the pinned baseline and GitHub API metadata at an exact candidate commit. It compares both `pstack/` and the imported Claude harness, including content and file-mode changes without a version bump; unrelated monorepo changes do not trigger an update. It writes no files and executes no remote code. An upstream change is not a reviewed, installable pstack-omp release; the checker does not discover port releases. It never synchronizes or installs updates automatically. Migration and installation require explicit approval.
+
+### Plugin lifecycle
 
 ```sh
 omp plugin disable pstack-omp
@@ -80,3 +98,10 @@ Install and verify this plugin first. Then remove only manual `pstack-*` skill a
 Updates are deliberate: stage a new pinned upstream revision, preserve its complete dependency tree and license, reapply and review the omp adaptation, run isolated verification and relevant bounded workflow checks, then publish a new tagged release. This repository's maintainer owns that process; upstream does not maintain this adaptation.
 
 The upstream MIT [LICENSE](LICENSE) is preserved. This project is not an official Cursor or omp release.
+
+## Release notes
+
+### Unreleased
+
+- Add an on-demand, read-only upstream checker and local `pstack-check-updates` skill. Approved migrations remain a maintainer-reviewed process; no automatic updater is added.
+- Make the repository public and use credential-free HTTPS installation instructions. Preserve the upstream MIT license and attribution.

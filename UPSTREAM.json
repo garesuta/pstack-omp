@@ -5,6 +5,7 @@
   "sourceDirectory": "harness/pstack/claude-code",
   "originalSkillsDirectory": "pstack/skills",
   "skillCount": 58,
+  "localSkills": ["check-updates"],
   "agentCount": 2,
   "license": "MIT",
   "adaptations": [
